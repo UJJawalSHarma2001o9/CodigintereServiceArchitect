@@ -15,6 +15,7 @@ class Home extends BaseController
     {
         helper('new');
         echo test_helper('Hello World');
+        echo "Pull test with cmd git commond" ; 
 
     }
 }
