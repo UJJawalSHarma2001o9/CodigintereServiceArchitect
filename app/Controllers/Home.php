@@ -14,7 +14,7 @@ class Home extends BaseController
     public function practice_helper()
     {
         helper('new');
-        echo sabadha('Hello World');
+        echo test_helper('Hello World');
 
     }
 }
