@@ -12,6 +12,7 @@ class UserService
 
     public function __construct()
     {
+        helper('response');
         $this->userModel = new UsersModel();
         $this->validation = Services::validation();
 
@@ -152,13 +153,17 @@ class UserService
 
     public function changeUserStatus($id, $status)
     {
-  
+
         $rules = [
             'id' => 'required',
             'status' => 'required'
         ];
 
-        if (!$this->validation->setRules($rules)->run(['id' => $id, 'status' => $status])) {
+        if (
+            !$this->validation->setRules($rules)->run(
+                ['id' => $id, 'status' => $status]
+            )
+        ) {
             return [
                 "status" => false,
                 "statusCode" => 400,
@@ -178,7 +183,7 @@ class UserService
                 "user" => ["id" => $id, "status" => $status]
             ];
         } catch (\Exception $e) {
-            print_r($e->getMessage()) ; 
+            print_r($e->getMessage());
             log_message('error', date('Y-m-d H:i:s') . ' - Database Error: ' . $e->getMessage());
             return [
                 "status" => false,
@@ -190,35 +195,141 @@ class UserService
         }
     }
 
+    public function deleteStatusUser($id)
+    {
+        $deleteUserStatus = ENUM_STATUS_DELETED;
+        $deleteUser = $this->userModel->set('status', $deleteUserStatus)
+            ->where('id', $id)->update();
+        if (!empty($deleteUser)) {
+            return sendResponse(
+                true,
+                200,
+                "User deleted successfully",
+                'user',
+                [],
+                []
+            );
+        }
+    }
 
-    // public function changeUserStatus($id, $status)
-    // {
-    //     $rules = [
-    //         'id' => 'required',
-    //         'status' => 'required'
-    //     ];
+    public function loginCleanCode($jsonData)
+    {
+        $rules = [
+            'email' => 'required|valid_email',
+            'password' => 'required'
+        ];
+        $this->validation->setRules($rules);
+        if (!$this->validation->run($jsonData)) {
+            return sendResponse(
+                false,
+                400,
+                "Validation failed",
+                "user",
+                [],
+                $this->validation->getErrors()
+            );
+        }
+        $email = $jsonData['email'];
+        $password = $jsonData['password'];
+        $user = $this->userModel->where('email', $email)->first();
+        if (!$user) {
+            return sendResponse(
+                false,
+                404,
+                "User not found",
+                "user",
+                [],
+                ['email' => 'No account found with this email']
+            );
+        }
+        if ($password !== $user['password']) {
+            return sendResponse(
+                false,
+                401,
+                "Invalid credentials",
+                "user",
+                [],
+                ['password' => 'Incorrect password']
+            );
+        }
+        $token = bin2hex(random_bytes(32));
+        $afterLoginPayload = [
+            'id' => $user['id'],
+            'email' => $user['email'],
+            'token' => $token,
+            'apiKey' => $token
 
-    //     if (!$this->validation->setRules($rules)->run($rules)) {
-    //         return [
-    //             "status" => "failed",
-    //             "statusCode" => 400,
-    //             "message" => "Validation Error",
-    //             "errors" => $this->validation->getErrors(),
-    //             "user" => []
-    //         ];
-    //     }
+        ];
+        return sendResponse(
+            true,
+            200,
+            "Login successful",
+            "user",
+            $afterLoginPayload
+        );
+    }
 
-    //     try {
-    //         $this->userModel->set($status)->where('id', $id)->update();
-    //         return [
-    //             "status" => "success",
-    //             "statusCode" => 200,
-    //             "message" => "User status updated successfully",
-    //             "errors" => [],
-    //             "user" => $status
-    //         ];
-    //     } catch (\Exception $e) {
-    //         log_message('error', date('Y-m-d H:i:s') . ' - Database Error: ' . $e->getMessage());
-    //     }
-    // }
+    public function login($jsonData)
+    {
+        $rules = [
+            'email' => 'required',
+            'password' => 'required'
+        ];
+        if (!$this->validation->setRules($rules)->run($jsonData)) {
+            return [
+                "status" => "failed",
+                "statusCode" => 400,
+                "message" => "Validation Error",
+                "errors" => $this->validation->getErrors(),
+                "user" => []
+            ];
+        }
+        $emailConditions = [
+            'email' => $jsonData['email'],
+            'status' => ENUM_STATUS_ACTIVE
+        ];
+        $user = $this->userModel->where($emailConditions)->first();
+        if (empty($user)) {
+            sendResponse(
+                false,
+                404,
+                "User not found",
+                'user',
+                [],
+                []
+            );
+        }
+        if (
+            $user['password'] === $jsonData['password']
+            &&
+            $user['email'] === $jsonData['email']
+        ) {
+            $token = '1245';
+            $apiKey = 'API-KEY-';
+            return sendResponse(
+                true,
+                200,
+                "User logged in successfully",
+                'user',
+                [
+                    'id' => $user['id'],
+                    'user_id' => $user['user_id'],
+                    'full_name' => $user['name'],
+                    'email' => $user['email'],
+                    'jwtToken' => $token,
+                    'apiKey' => $apiKey,
+                ],
+                []
+            );
+        } else {
+            return sendResponse(
+                false,
+                401,
+                "Invalid credentials",
+                'user',
+                [],
+                []
+            );
+        }
+    }
 }

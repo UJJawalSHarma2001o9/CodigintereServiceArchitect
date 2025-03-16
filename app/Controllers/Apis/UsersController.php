@@ -176,4 +176,15 @@ class UsersController extends CommonController
         }
     }
 
+    public function StatusDelete($id = null)
+    {
+        return $this->userService->deleteStatusUser($id);
+    }
+    public function login()
+    {
+        $jsonData = $this->request->getJSON(true);
+        $userLoginService = $this->userService->loginCleanCode($jsonData);
+        return $userLoginService;
+    }
+
 }
