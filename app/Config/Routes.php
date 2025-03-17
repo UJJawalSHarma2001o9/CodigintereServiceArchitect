@@ -9,7 +9,8 @@ use CodeIgniter\Router\RouteCollection;
 //  $routes->get('/', function() {
 //     return 'hello';
 // });
-$routes->get('helper', 'Home::practice_helper');
+// $routes->get('helper', 'Home::practice_helper');
+$routes->post('jwt-test-login', 'Apis\JwtAuthController::login');
 
 $routes->group('api', function ($routes) {
     $routes->group('user', function ($routes) {
@@ -20,7 +21,13 @@ $routes->group('api', function ($routes) {
         $routes->patch('(:num)', 'Apis\UsersController::changeStatus/$1');
         $routes->delete('(:num)', 'Apis\UsersController::delete/$1');
         $routes->post('(:num)/delete', 'Apis\UsersController::StatusDelete/$1');
-        $routes->post('login','Apis\UsersController::login');
+        $routes->post('login', 'Apis\UsersController::login');
     });
+
+
+});
+
+$routes->group('jwt-auth-test', ['filter' => 'jwtAuth'], function ($routes) {
+    $routes->get('get-users', 'Apis\ClinicController::get_users');
 });
 

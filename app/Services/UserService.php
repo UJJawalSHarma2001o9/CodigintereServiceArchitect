@@ -21,15 +21,6 @@ class UserService
     public function getAllUsers()
     {
         $users = $this->userModel->orderBy('created_at', 'DESC')->findAll();
-        $data = [];
-        // foreach ($users as $user) {
-        //     $data[] = [
-        //         'user_id' => $user['id'],
-        //         'name' => $user['name'],
-        //         'email' => $user['email'],
-        //         'created_at' => $user['created_at']
-        //     ];
-        // }
         $data = array_map(fn($user) => [
             'id' => $user['id'] ?? "",
             'user_id' => $user['user_id'] ?? '',
@@ -40,8 +31,6 @@ class UserService
         ], $users);
         return $data;
     }
-
-
     public function getUserById($id)
     {
 
@@ -64,7 +53,9 @@ class UserService
     {
         $rules = [
             "name" => "required|min_length[3]|max_length[50]",
-            "email" => "required|valid_email"
+            "email" => "required|valid_email",
+            "password" => "required",
+            "address" => "required",
         ];
 
         if (!$this->validation->setRules($rules)->run($data)) {
@@ -78,10 +69,10 @@ class UserService
         }
 
         try {
+
             $data["user_id"] = $this->generateUserId();
-
+            $data["password"] = password_hash($data['password'], PASSWORD_DEFAULT);
             $this->userModel->insert($data);
-
             return [
                 "status" => "success",
                 "statusCode" => 201,
