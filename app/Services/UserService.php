@@ -5,16 +5,20 @@ namespace App\Services;
 use App\Models\UsersModel;
 use CodeIgniter\Validation\Validation;
 use config\Services;
+use App\Services\CommonService;
 class UserService
 {
     protected UsersModel $userModel;
     protected Validation $validation;
-
+    protected CommonService $commonService;
     public function __construct()
     {
         helper('response');
+        helper('file_upload');
+        helper('checkvalidation');
         $this->userModel = new UsersModel();
         $this->validation = Services::validation();
+        $this->commonService = new CommonService();
 
     }
 
@@ -37,7 +41,7 @@ class UserService
         $user = $this->userModel->find($id);
 
         if (!$user) {
-            return null; // Handle not found in controller
+            return null;
         }
 
         return [
@@ -223,6 +227,7 @@ class UserService
         $email = $jsonData['email'];
         $password = $jsonData['password'];
         $user = $this->userModel->where('email', $email)->first();
+
         if (!$user) {
             return sendResponse(
                 false,
@@ -322,5 +327,52 @@ class UserService
                 []
             );
         }
+    }
+
+
+    public function handleUserFileUpload($file, $data)
+    {
+        $rules = [
+            'email' => 'required',
+            'name' => 'required',
+            'phone' => 'required'
+        ];
+        $this->validation->setRules($rules);
+        if (!$this->validation->run($data)) {
+            return sendResponse(
+                false,
+                400,
+                "Validation failed",
+                "user",
+                [],
+                $this->validation->getErrors()
+            );
+        }
+        $user_id = uniqid('user_');
+        $filePath = uploadFile($file, 'users', $user_id);
+        if ($filePath) {
+            $userData = [
+                'user_id' => $user_id,
+                'name' => $data['name'] ?? '',
+                'email' => $data['email'] ?? '',
+                'image' => $filePath,
+            ];
+
+
+            $this->userModel->insert($userData);
+            // $insertedId = $this->userModel->insertID();
+
+            return [
+                'status' => 'success',
+                'message' => 'File uploaded successfully',
+                'user' => $userData, // Return full user data
+                'filePath' => base_url($filePath),
+            ];
+        }
+
+        return [
+            'status' => 'error',
+            'message' => 'File upload failed',
+        ];
     }
 }

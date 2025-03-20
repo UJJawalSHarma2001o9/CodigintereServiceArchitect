@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache' => PageCache::class,
         'performance' => PerformanceMetrics::class,
         'jwtAuth' => \App\Filters\JwtAuthFilter::class,
+        'apiKeyAuth' => \App\Filters\ApiKeyAuthFilter::class
     ];
 
     /**
@@ -108,5 +109,8 @@ class Filters extends BaseFilters
         'jwtAuth' => [
             'before' => ['jwt-auth-test/*']
         ],
+        'apiKeyAuth' => [
+            'before' => ['apiKey/*']
+        ]
     ];
 }

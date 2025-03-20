@@ -1,24 +1,23 @@
 <?php
-
 namespace App\Models;
-
 use CodeIgniter\Model;
 
-class UsersModel extends Model
+class ApiKeyModel extends Model
 {
-    protected $table = 'users';
+    protected $table = 'user_login';
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'id',
+        'uid',
         'user_id',
-        'name',
         'email',
-        'address',
-        'phone',
-        'image' , 
         'password',
+        'prefix',
+        'hash',
+        'expire',
         'created_at',
         'updated_at',
         'status'
     ];
+
 }

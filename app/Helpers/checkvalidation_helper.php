@@ -2,7 +2,7 @@
 
 use Config\Services;
 
-if (!function_exists('checkvalidation')) {
+if (!function_exists('isCheckvalidation')) {
     function isCheckValidation($rules, $data)
     {
         $validation = Services::validation();
@@ -18,7 +18,8 @@ if (!function_exists('checkvalidation')) {
                 $validation->getErrors()
             );
         }
-
-        return true; // Return true if validation passes
+       
+        
+        return ['status' => true]; // Return true if validation passes
     }
 }

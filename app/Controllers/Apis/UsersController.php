@@ -186,5 +186,30 @@ class UsersController extends CommonController
         $userLoginService = $this->userService->loginCleanCode($jsonData);
         return $userLoginService;
     }
+    public function userFileupload()
+    {
+        $file = $this->request->getFile('image');
+        $data =  $this->request->getPost();
+        if (!$file) {
+            return $this->sendResponse(
+                false,
+                400,
+                "No file uploaded",
+                'user',
+                [],
+                "No file uploaded"
+            );
+        }
 
+        $response = $this->userService->handleUserFileUpload($file, $data);
+        // print_r($response) ; die ; 
+        return sendResponse(
+            $response['status'] === 'success',
+            $response['status'] === 'success' ? 200 : 400,
+            $response['message'],
+            'user',
+            $response['status'] === 'success' ? $response['user'] : [], // Return user data if success
+            []
+        );
+    }
 }

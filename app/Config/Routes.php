@@ -6,11 +6,6 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-//  $routes->get('/', function() {
-//     return 'hello';
-// });
-// $routes->get('helper', 'Home::practice_helper');
-$routes->post('jwt-test-login', 'Apis\JwtAuthController::login');
 
 $routes->group('api', function ($routes) {
     $routes->group('user', function ($routes) {
@@ -22,12 +17,17 @@ $routes->group('api', function ($routes) {
         $routes->delete('(:num)', 'Apis\UsersController::delete/$1');
         $routes->post('(:num)/delete', 'Apis\UsersController::StatusDelete/$1');
         $routes->post('login', 'Apis\UsersController::login');
+        $routes->post('file-upload', 'Apis\UsersController::userFileupload');
     });
-
-
 });
 
+$routes->post('jwt-test-login', 'Apis\JwtAuthController::login');
 $routes->group('jwt-auth-test', ['filter' => 'jwtAuth'], function ($routes) {
     $routes->get('get-users', 'Apis\ClinicController::get_users');
 });
 
+$routes->post('auth-login', 'Apis\ApiKeyController::login');
+
+$routes->group('apiKeyAuth', ['filter' => 'apiKeyAuth', 'namespace' => 'App\Controller\Apis'], function ($routes) {
+    $routes->get('users', 'UsersController::index');
+});

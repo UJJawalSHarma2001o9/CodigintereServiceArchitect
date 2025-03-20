@@ -2,16 +2,16 @@
 
 use CodeIgniter\HTTP\ResponseInterface;
 
-if (!function_exists('send_response')) {
+if (!function_exists('sendResponse')) {
     /**
      * Send a formatted JSON response
      *
-     * @param bool $status
-     * @param int $httpStatusCode
-     * @param string $message
-     * @param string $dataKey
-     * @param array $data
-     * @param array $errors
+     * @param bool $status True for success, false for failure
+     * @param int $httpStatusCode HTTP response code (e.g., 200, 400, 500)
+     * @param string $message Response message
+     * @param string $dataKey Key for data payload (default: 'data')
+     * @param array|object|null $data Payload data (default: empty array)
+     * @param array|null $errors Error messages (default: empty array)
      * @return ResponseInterface
      */
     function sendResponse(
@@ -19,17 +19,26 @@ if (!function_exists('send_response')) {
         int $httpStatusCode,
         string $message,
         string $dataKey = 'data',
-        array $data = [],
-        array $errors = []
+        $data = [],
+        $errors = []
     ) {
+        // Ensure data and errors are always formatted correctly
+        $formattedData = empty($data) ? [] : (is_array($data) || is_object($data) ? $data : [$data]);
+        $formattedErrors = empty($errors) ? [] : (is_array($errors) ? $errors : [$errors]);
+
+        // Create response array
         $response = [
-            'status' => $status ? 'success' : 'failed',
+            'success' => $status, // Boolean instead of string
             'statusCode' => $httpStatusCode,
             'message' => $message,
-            'errors' => $errors,
-            $dataKey => $data,
+            $dataKey => $formattedData,
+            'errors' => $formattedErrors,
         ];
 
-        return service('response')->setStatusCode($httpStatusCode)->setJSON($response);
+        // Return structured JSON response
+        return service('response')
+            ->setStatusCode($httpStatusCode)
+            ->setContentType('application/json')
+            ->setJSON($response);
     }
 }
