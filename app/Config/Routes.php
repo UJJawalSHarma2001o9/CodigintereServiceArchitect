@@ -5,7 +5,10 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-
+$routes->group('/', function ($routes) {
+    $routes->get('' , 'Home::loginPage');
+    $routes->get('dashboard' , 'Home::dashboard') ;
+}) ; 
 
 $routes->group('api', function ($routes) {
     $routes->group('user', function ($routes) {
@@ -18,6 +21,7 @@ $routes->group('api', function ($routes) {
         $routes->post('(:num)/delete', 'Apis\UsersController::StatusDelete/$1');
         $routes->post('login', 'Apis\UsersController::login');
         $routes->post('file-upload', 'Apis\UsersController::userFileupload');
+        $routes->get('check-api-response', 'Apis\UserController::checkApiResponse');
     });
 });
 

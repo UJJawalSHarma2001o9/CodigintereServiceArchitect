@@ -42,3 +42,44 @@ if (!function_exists('sendResponse')) {
             ->setJSON($response);
     }
 }
+
+if (!function_exists('api_response')) {
+    /**
+     * Standard API response formatter
+     *
+     * @param string $status 'success' or 'error'
+     * @param int $statusCode HTTP status code
+     * @param string $message Response message
+     * @param mixed $data Additional data to include in response
+     * @param string $error Error message (if any)
+     * @return \CodeIgniter\HTTP\Response
+     */
+    function api_response(string $status, int $statusCode, string $message = '', $data = null, string $error = '')
+    {
+        $response = service('response');
+        
+        $responseData = [
+            'status'     => $status,
+            'statusCode' => $statusCode,
+            'message'    => $message,
+        ];
+
+        if (!empty($error)) {
+            $responseData['error'] = $error;
+        }
+
+        if ($data !== null) {
+            // If $data is an array, merge it with the response
+            if (is_array($data)) {
+                $responseData = array_merge($responseData, $data);
+            } else {
+                // For non-array data, add it to a generic 'data' key
+                $responseData['data'] = $data;
+            }
+        }
+
+        return $response
+            ->setStatusCode($statusCode)
+            ->setJSON($responseData);
+    }
+}

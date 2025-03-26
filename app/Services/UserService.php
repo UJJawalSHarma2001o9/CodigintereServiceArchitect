@@ -6,6 +6,8 @@ use App\Models\UsersModel;
 use CodeIgniter\Validation\Validation;
 use config\Services;
 use App\Services\CommonService;
+
+use App\Libraries\LoggerService;
 class UserService
 {
     protected UsersModel $userModel;
@@ -214,6 +216,7 @@ class UserService
             'password' => 'required'
         ];
         $this->validation->setRules($rules);
+
         if (!$this->validation->run($jsonData)) {
             return sendResponse(
                 false,
@@ -224,11 +227,31 @@ class UserService
                 $this->validation->getErrors()
             );
         }
+
+        // Capture user details
         $email = $jsonData['email'];
         $password = $jsonData['password'];
+        $ip = Services::request()->getIPAddress();
+        $userAgent = Services::request()->getUserAgent()->getAgentString();
+        $file = "users";
+        $logger = LoggerService::getLogger('login');
+
+
+        // Log login attempt with user IP and device info
+        $logger->info("Login attempt", [
+            'email' => $email,
+            'ip' => $ip,
+            'device' => $userAgent
+        ]);
+
         $user = $this->userModel->where('email', $email)->first();
 
         if (!$user) {
+            $logger->warning("Failed login - User not found", [
+                'email' => $email,
+                'ip' => $ip,
+                'device' => $userAgent
+            ]);
             return sendResponse(
                 false,
                 404,
@@ -238,7 +261,13 @@ class UserService
                 ['email' => 'No account found with this email']
             );
         }
+
         if ($password !== $user['password']) {
+            $logger->warning("Failed login - Incorrect password", [
+                'email' => $email,
+                'ip' => $ip,
+                'device' => $userAgent
+            ]);
             return sendResponse(
                 false,
                 401,
@@ -248,14 +277,23 @@ class UserService
                 ['password' => 'Incorrect password']
             );
         }
+
+        // Generate token
         $token = bin2hex(random_bytes(32));
+
         $afterLoginPayload = [
             'id' => $user['id'],
             'email' => $user['email'],
             'token' => $token,
             'apiKey' => $token
-
         ];
+
+        $logger->info("Login successful", [
+            'email' => $email,
+            'ip' => $ip,
+            'device' => $userAgent
+        ]);
+
         return sendResponse(
             true,
             200,

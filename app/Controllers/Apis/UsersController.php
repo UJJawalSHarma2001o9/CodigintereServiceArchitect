@@ -9,6 +9,7 @@ class UsersController extends CommonController
     protected UserService $userService;
     public function __construct()
     {
+        helper('response');
         $this->userService = new UserService();
     }
     public function index()
@@ -46,7 +47,6 @@ class UsersController extends CommonController
 
         }
     }
-
     public function create()
     {
         try {
@@ -189,7 +189,7 @@ class UsersController extends CommonController
     public function userFileupload()
     {
         $file = $this->request->getFile('image');
-        $data =  $this->request->getPost();
+        $data = $this->request->getPost();
         if (!$file) {
             return $this->sendResponse(
                 false,
@@ -212,4 +212,18 @@ class UsersController extends CommonController
             []
         );
     }
+
+    public function checkApiResponse()
+    {
+        return api_response(
+            true,
+            200,
+            "Get users list successfully",
+            ['users' => ""],
+            '',
+
+        );
+
+    }
+    
 }
